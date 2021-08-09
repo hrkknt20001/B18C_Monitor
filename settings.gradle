@@ -1,0 +1,2 @@
+rootProject.name='B18 Monitor'
+include ':app'
