@@ -1,6 +1,7 @@
 package com.example.myapplication
 
 //import android.R
+import android.app.Notification
 import android.bluetooth.BluetoothAdapter
 import android.graphics.Color
 import android.os.Bundle
@@ -14,7 +15,11 @@ import android.widget.Button
 import android.widget.TextView
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
+import com.github.anastr.speedviewlib.TubeSpeedometer
+import com.github.anastr.speedviewlib.components.Style
+import kotlinx.android.synthetic.main.fragment_screen_slide_page_2.*
 import java.io.OutputStream
+import java.text.SimpleDateFormat
 import java.util.*
 
 private const val NUM_PAGES = 3
@@ -34,6 +39,11 @@ class MainActivity : AppCompatActivity() {
     private var textView_throttle_pos_b :TextView? = null
     private var textView_throttle_pos_p :TextView? = null
     private var textView_ecu_voltage :TextView? = null
+    private var engineRPM : TubeSpeedometer? = null;
+    private var textView_water_temp :TextView? = null
+    private var textView_intake_temp  :TextView? = null
+    private var textView_time  :TextView? = null
+    private var textView_speed :TextView? = null
 
     private var mTimer : Timer?      = null;
     private var mHandler: Handler = Handler()
@@ -66,7 +76,11 @@ class MainActivity : AppCompatActivity() {
                         textView_ecu_voltage = findViewById<TextView>(R.id.textView_pid_42);
                     }
                     1 -> {
-
+                        engineRPM = findViewById<TubeSpeedometer>(R.id.awesomeSpeedometer);
+                        textView_water_temp = findViewById<TextView>(R.id.textView_water_temp);
+                        textView_intake_temp = findViewById<TextView>(R.id.textView_intake_temp);
+                        textView_time = findViewById<TextView>(R.id.textView_time);
+                        textView_speed = findViewById<TextView>(R.id.textView_speed);
                     }
                     2 -> {
 
@@ -162,7 +176,7 @@ class MainActivity : AppCompatActivity() {
                         textView_engine_rpm!!.setText(
                             mReceiveTask!!.engine_rpm.toString()
                         )
-                        if (8000 < mReceiveTask!!.coolant_temp) {
+                        if (8000 < mReceiveTask!!.engine_rpm) {
                             textView_engine_rpm!!.setTextColor(Color.RED)
                         }
                     }
@@ -208,9 +222,52 @@ class MainActivity : AppCompatActivity() {
                             String.format("%.1f", mReceiveTask!!.voltage.toFloat())
                         )
                     }
+
+                    //engineRPM?.speedTo(3000f, 200)
+                    engineRPM?.speedTo(mReceiveTask!!.engine_rpm.toFloat(), 0)
+//                    if (8000 < mReceiveTask!!.engine_rpm) {
+//                        engineRPM?.setSpeedometerColor(0xFF0000)
+//                    }else{
+//                        engineRPM?.setSpeedometerColor(0xFFFFFF)
+//                    }
+
+                    if( textView_water_temp != null) {
+                        textView_water_temp!!.setText(
+                            mReceiveTask!!.coolant_temp.toString()
+                        )
+                        if (mReceiveTask!!.coolant_temp < 70) {
+                            textView_water_temp!!.setTextColor(Color.BLUE)
+                        } else if (110 < mReceiveTask!!.coolant_temp) {
+                            textView_water_temp!!.setTextColor(Color.RED)
+                        } else {
+                            textView_water_temp!!.setTextColor(Color.WHITE)
+                        }
+                    }
+
+                    if(textView_intake_temp != null) {
+                        textView_intake_temp!!.setText(
+                            mReceiveTask!!.air_temp.toString()
+                        )
+                    }
+
+                    if(textView_time != null) {
+                        textView_time!!.setText(getTime())
+                    }
+
+                    if( textView_speed != null) {
+                        textView_speed!!.setText(
+                            mReceiveTask!!.vehicle_spd.toString()
+                        )
+                    }
                 }
             }
         }, 200, 200)
+    }
+
+    fun getTime(): String {
+        val date = Date()
+        val format = SimpleDateFormat("HH:mm:ss", Locale.getDefault())
+        return format.format(date)
     }
 
     override fun onDetachedFromWindow() {
