@@ -21,6 +21,7 @@ import kotlinx.android.synthetic.main.fragment_screen_slide_page_2.*
 import java.io.OutputStream
 import java.text.SimpleDateFormat
 import java.util.*
+import kotlin.math.abs
 
 private const val NUM_PAGES = 3
 
@@ -44,6 +45,11 @@ class MainActivity : AppCompatActivity() {
     private var textView_intake_temp  :TextView? = null
     private var textView_time  :TextView? = null
     private var textView_speed :TextView? = null
+    private var textView_gear_pos :TextView? = null
+
+    private var finalGear :Double = 4.4
+    private var tireSize : Double = 596 * Math.PI / 1000.0
+    private var mm2km : Double = 60.0 / 1000.0
 
     private var mTimer : Timer?      = null;
     private var mHandler: Handler = Handler()
@@ -74,6 +80,7 @@ class MainActivity : AppCompatActivity() {
                         textView_throttle_pos_b = findViewById<TextView>(R.id.textView_pid_11);
                         textView_throttle_pos_p = findViewById<TextView>(R.id.textView_pid_45);
                         textView_ecu_voltage = findViewById<TextView>(R.id.textView_pid_42);
+                        textView_gear_pos = findViewById<TextView>(R.id.textView_gear) ;
                     }
                     1 -> {
                         engineRPM = findViewById<TubeSpeedometer>(R.id.awesomeSpeedometer);
@@ -81,6 +88,7 @@ class MainActivity : AppCompatActivity() {
                         textView_intake_temp = findViewById<TextView>(R.id.textView_intake_temp);
                         textView_time = findViewById<TextView>(R.id.textView_time);
                         textView_speed = findViewById<TextView>(R.id.textView_speed);
+                        textView_gear_pos = findViewById<TextView>(R.id.textView_gear_2) ;
                     }
                     2 -> {
 
@@ -258,6 +266,29 @@ class MainActivity : AppCompatActivity() {
                         textView_speed!!.setText(
                             mReceiveTask!!.vehicle_spd.toString()
                         )
+                    }
+
+                    if( textView_gear_pos != null) {
+
+                        if( mReceiveTask!!.engine_rpm != -1 && mReceiveTask!!.vehicle_spd != -1 ){
+                            var rate: Double = 0.0
+                            var gearPos: Int = 0
+                            rate = mReceiveTask!!.engine_rpm.toDouble() / finalGear * tireSize * mm2km / mReceiveTask!!.vehicle_spd.toDouble()
+
+                            if( abs(rate-3.230) < 3.230 * 0.2 ){       //
+                                textView_gear_pos!!.text = "1"
+                            }else if( abs(rate-2.105) < 2.105 * 0.2 ){ // 0.421
+                                textView_gear_pos!!.text = "2"
+                            }else if( abs(rate-1.458) < 1.458 * 0.15 ){ // 0.291
+                                textView_gear_pos!!.text = "3"
+                            }else if( abs(rate-1.107) < 1.107 * 0.15 ){ // 0.221
+                                textView_gear_pos!!.text = "4"
+                            }else if( abs(rate-0.848) < 0.848 * 0.10 ){ // 0.169
+                                textView_gear_pos!!.text = "5"
+                            }else{
+                                textView_gear_pos!!.text = "-"
+                            }
+                        }
                     }
                 }
             }
